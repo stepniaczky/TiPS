@@ -1,15 +1,6 @@
 from stream_functions import save, load
 from convert import code, decode
 
-H = [[1, 0, 1, 0, 0, 1, 0, 1,      1, 0, 0, 0, 0, 0, 0, 0],    # 165 / 128
-     [0, 1, 1, 1, 0, 1, 1, 1,      0, 1, 0, 0, 0, 0, 0, 0],    # 119 / 64
-     [0, 0, 0, 1, 1, 1, 1, 0,      0, 0, 1, 0, 0, 0, 0, 0],    # 30 / 32
-     [1, 0, 0, 0, 1, 1, 1, 1,      0, 0, 0, 1, 0, 0, 0, 0],    # 143 / 16
-     [1, 1, 1, 0, 0, 0, 1, 0,      0, 0, 0, 0, 1, 0, 0, 0],    # 226 / 8
-     [1, 1, 1, 1, 0, 0, 0, 1,      0, 0, 0, 0, 0, 1, 0, 0],    # 241 / 4
-     [1, 1, 0, 1, 1, 1, 0, 1,      0, 0, 0, 0, 0, 0, 1, 0],    # 221 / 2
-     [0, 1, 0, 0, 1, 0, 1, 1,      0, 0, 0, 0, 0, 0, 0, 1]]    # 75 / 1
-
 def menu():
     choice = int
     try:
@@ -22,7 +13,6 @@ def menu():
     except ValueError:
         main(choice)
 
-
 def main(choice):
     if choice == 1:
         filename = input("Nazwa pliku, ktory chcesz zakodowac: ")
@@ -30,6 +20,7 @@ def main(choice):
             message = load(filename)
             encoded = code(message)
             save(f"coded-{filename}", encoded)
+            print(f"Pomyslnie zapisano zakodowana wiadomosc do pliku: coded-{filename}")
         except FileNotFoundError:
             print("Podano bledna nazwe pliku!")
 
@@ -39,6 +30,7 @@ def main(choice):
             encoded_message = load(filename)
             decoded = decode(encoded_message)
             save(f"encoded-{filename}", decoded)
+            print(f"Pomyslnie zapisano odkodowana wiadomosc do pliku: encoded-{filename}")
         except FileNotFoundError:
             print("Podano bledna nazwe pliku!")
 
@@ -51,4 +43,5 @@ def main(choice):
     print()
     menu()
 
+# application start
 menu()
