@@ -1,3 +1,3 @@
-*.idea
-*__pycache__
-zad1/src/stream-files
+*/.idea/*
+*/__pycache__/*
+zad1/src/stream-files/*
