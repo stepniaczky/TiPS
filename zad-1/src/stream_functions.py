@@ -3,7 +3,8 @@ def save(filename, msg):
         file.write(msg)
     return 0
 
+
 def load(filename):
     with open(f"stream-files/{filename}") as file:
-        message = file.read()  # ewenualnie readlines do tabeli wleci
-    return message
+        arr = file.readlines()
+    return arr
