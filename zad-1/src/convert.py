@@ -38,22 +38,24 @@ def encode(message):
 
             for i in range(controlColumns):
                 for j in range(asciiColumns):
-                    control_bits[i] += ascii_bin[j] * H[i][j]  # obliczenie kolejnych bitow kontrolnych
-                control_bits[i] %= 2
+                    control_bits[i] -= ascii_bin[j] * H[i][j]  # obliczenie kolejnych bitow kontrolnych
+                control_bits[i] %= 2                           # c[0] = -h[0][0] * a[0] - ... - h[0][m] * a[m]
 
             for i in range(asciiColumns):
                 encoded_msg += str(ascii_bin[i])
             for i in range(controlColumns):
                 encoded_msg += str(control_bits[i])
             encoded_msg += "\n"
+
     return encoded_msg  # T = [a1, ..., am, c1, ..., cn] wektor nadawanej wiadomosci
 
 
 def decode(encoded_message):
     string = ""
     for row in encoded_message:
-        R = []
+        R = []  # R = T + E
         HR = []  # HR = HT + HE
+        HE = []
         singleErr = False
         founded = False
 
@@ -62,12 +64,13 @@ def decode(encoded_message):
 
         for i in range(nrRows):
             HR.append(0)
+            HE.append(0)
 
         for i in range(nrRows):
             for j in range(nrColumns):
                 HR[i] += R[j] * H[i][j]  # HR = HT + HE
-            HR[i] %= 2  # HR - HT = HE
-            if HR[i] == 1:  # jezeli HE != 0 -> znaleziono blad
+            HE[i] = HR[i] % 2  # HR - HT = HE
+            if HE[i] == 1:  # jezeli HE != 0 -> znaleziono blad
                 singleErr = True
 
         if singleErr:
@@ -78,37 +81,32 @@ def decode(encoded_message):
                 for j in range(i + 1, nrColumns):
                     doubleErr = True
                     for k in range(nrRows):  # jezeli bledow jest wiecej niz 1 to HE przyjmie postac sumy
-                        if HR[k] != xor(H[k][i], H[k][j]):  # to HE przyjmie postac sumy 2 kolumn macierzy H
+                        if HE[k] != xor(H[k][i], H[k][j]):  # to HE przyjmie postac sumy 2 kolumn macierzy H
                             doubleErr = False  # kolumny macierzy H wskazuja kolumny z bledem w macierzy R
                             break  # jezeli rozni sie choc jedna komorka, przestan sprawdzac kolumny
 
                     if doubleErr:
-                        # print(R)
-                        R[i] = int(not R[i])
+                        R[i] = int(not R[i])  # zamiana blednych bitow
                         R[j] = int(not R[j])
-                        # print(R)
-                        # print()
                         founded = True  # jezeli znalazlo blad, moze przestac szukac
                         break
 
-            if singleErr:
+            if not founded:
                 for i in range(nrColumns):
-                    if founded:
-                        break
-
                     for j in range(nrRows):
-                        if H[j][i] != HR[j]:  # jezeli H != HE dla pojedynczego wyrazu, przestan sprawdzac kolumne
-                            break
+
+                        if HE[j] != H[j][i]:  # jezeli HE != H dla pojedynczego wyrazu,
+                            break             # przestan sprawdzac kolumne
                         if j == 7:  # jezeli H = HE to w tej kolumnie jest blad
-                            R[i] = int(not R[i])
-                            founded = True  # jezeli znalazlo pojedynczy blad, moze przestac szukac
+                            R[i] = int(not R[i])  # zamiana blednego bitu
 
         ascii_ = 0
         q = asciiColumns - 1
-        for i in range(asciiColumns):
-            ascii_ += R[i] * (2 ** q)
+        while q >= 0:  # konwersja z systemu binarnego na dziesietny
+            ascii_ += R[-q - 1 - controlColumns] * (2 ** q)
             q -= 1
-        letter = chr(int(ascii_))
+
+        letter = chr(int(ascii_))  # zamianu kodu ASCII na odpowiadajacy znak
         string += letter
 
     return string
