@@ -98,7 +98,7 @@ def decode(encoded_message):
 
                         if HE[j] != H[j][i]:  # jezeli HE != H dla pojedynczego wyrazu,
                             break             # przestan sprawdzac kolumne
-                        if j == 7:  # jezeli H = HE to w tej kolumnie jest blad
+                        if j == nrRows - 1:  # jezeli H = HE to w tej kolumnie jest blad
                             R[i] = int(not R[i])  # zamiana blednego bitu
 
         ascii_ = 0
