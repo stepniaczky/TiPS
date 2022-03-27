@@ -12,6 +12,7 @@ H = [[1, 1, 1, 1, 1, 1, 0, 1,       1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
      [1, 1, 0, 0, 0, 0, 1, 1,       0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
      [1, 1, 0, 0, 1, 0, 1, 0,       0, 0, 0, 0, 0, 0, 0, 0, 0, 1]]
 
+
 nrRows = 10
 nrColumns = 18
 asciiColumns = 8
@@ -57,7 +58,7 @@ def decode(encoded_message):
         HR = []  # HR = HT + HE
         HE = []
         singleErr = False
-        founded = False
+        found = False
 
         for sign in range(nrColumns):
             R.append(int(row[sign]))  # R = T + E / wektor odebranej wiadomosci
@@ -75,7 +76,7 @@ def decode(encoded_message):
 
         if singleErr:
             for i in range(nrColumns):
-                if founded:
+                if found:
                     break
 
                 for j in range(i + 1, nrColumns):
@@ -88,10 +89,10 @@ def decode(encoded_message):
                     if doubleErr:
                         R[i] = int(not R[i])  # zamiana blednych bitow
                         R[j] = int(not R[j])
-                        founded = True  # jezeli znalazlo blad, moze przestac szukac
+                        found = True  # jezeli znalazlo blad, moze przestac szukac
                         break
 
-            if not founded:
+            if not found:
                 for i in range(nrColumns):
                     for j in range(nrRows):
 
