@@ -26,7 +26,11 @@ def handshake_transmitter(serialPort2, s):
 
 def divide_into_blocks(content):
     data = []
-    content_b = bytes(content, 'ascii')
+    string = ''
+    for line in content:
+        string += line
+
+    content_b = bytes(string, 'ascii')
     # data.append(content_b[:128])
     # data.append(content_b[128:256])
     # data.append(content_b[256:384])
@@ -36,18 +40,24 @@ def divide_into_blocks(content):
     while not all_filled:
         if byte == 128:
             data.append(content_b[:byte])
-        if byte > 128:
-            data.append(data.append(content_b[byte - 128:byte]))
+        elif byte > 128:
+            data.append(content_b[byte - 128:byte])
+
+        if len(data[index]) == 0:
+            all_filled = True
 
         if len(data[index]) < 128:  #DLACZEGO TU SIE WYPIERDALA
+
             missing_bytes = 128 - len(data[index])
-            data_extended = []
+            data_extended = b''
+            for i in range(missing_bytes):
+                data_extended += b' '
 
-            for i in missing_bytes:
-                data_extended.append(" ")
-
-            data.extend(data_extended)
+            data[index] += data_extended
             all_filled = True
+
+
+        # print(data[index])
         index += 1
         byte += 128
     return data
@@ -69,13 +79,15 @@ def main():
     #     print("nie nawiazano polaczenia")
 
     with open("message.txt") as file:
-        content = file.readline()
-    file.close()
+        content = file.readlines()
 
-    data = []
     data = divide_into_blocks(content)
     for x in data:
         print(x)
+    #
+    # for x in data:
+    #     print(len(x))
 
 
-main()
+if __name__ == "__main__":
+    main()

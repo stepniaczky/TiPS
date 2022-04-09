@@ -12,6 +12,7 @@ from time import time, sleep
 
 def handshake_receiver(serialPort1, s):
     # send = 1
+    start = time()
     while s:
         mins, secs = divmod(s, 60)
         # timer = '{:02d}:{:02d}'.format(mins, secs)
@@ -21,6 +22,10 @@ def handshake_receiver(serialPort1, s):
             serialPort1.write(b'0x15')
             # print(send)
             # send += 1
+
+        # if time() - start % 10 == 0:
+        # if time() - start == 60:
+
         if serialPort1.read():
             return True
         sleep(1)
