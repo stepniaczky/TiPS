@@ -29,7 +29,7 @@ def divide_into_blocks(content):
     string = ''
     for line in content:
         string += line
-
+    # content_b = serial.to_bytes(string)
     content_b = bytes(string, 'ascii')
     # data.append(content_b[:128])
     # data.append(content_b[128:256])
@@ -42,12 +42,10 @@ def divide_into_blocks(content):
             data.append(content_b[:byte])
         elif byte > 128:
             data.append(content_b[byte - 128:byte])
-
         if len(data[index]) == 0:
             all_filled = True
 
-        if len(data[index]) < 128:  #DLACZEGO TU SIE WYPIERDALA
-
+        if len(data[index]) < 128:
             missing_bytes = 128 - len(data[index])
             data_extended = b''
             for i in range(missing_bytes):
@@ -55,12 +53,22 @@ def divide_into_blocks(content):
 
             data[index] += data_extended
             all_filled = True
-
-
         # print(data[index])
         index += 1
         byte += 128
     return data
+
+
+def send_blocks(serialPort2, blocks):
+    blocks.reverse()    #odwracamy by dopisac na poczatku
+    index = 0
+    print(len(blocks))
+    while index < len(blocks):
+        # blocks.append(b'0x1') ?
+        # blocks.append(b'index') ?
+
+    for bl in blocks:
+        serialPort2.write(bl)
 
 
 def main():
@@ -82,12 +90,19 @@ def main():
         content = file.readlines()
 
     data = divide_into_blocks(content)
-    for x in data:
-        print(x)
+    # for x in data:
+    #     print(x)
     #
     # for x in data:
     #     print(len(x))
 
 
+    send_blocks(serialPort2, data)
+    # for el in data:
+    #     serialPort2.write(el)
+    print(serialPort1.read_all())
+
 if __name__ == "__main__":
     main()
+
+
