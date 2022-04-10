@@ -1,7 +1,8 @@
 import serial
 from time import time, sleep
 
-#odbiornik
+
+# odbiornik
 #
 # SOH = 0x1
 # EOT = 0x4
@@ -12,46 +13,50 @@ from time import time, sleep
 
 
 def handshake_receiver(serialPort1, s):
-    # send = 1
-    start = time()
     while s:
         mins, secs = divmod(s, 60)
-        # timer = '{:02d}:{:02d}'.format(mins, secs)
-        # print(timer, end="\r")
-        # print(secs)
         if secs % 10 == 0:
             serialPort1.write(b'0x15')
-            # print(send)
-            # send += 1
-
-        # if time() - start % 10 == 0:
-        # if time() - start == 60:
-
         if serialPort1.read():
             return True
+        print(serialPort1.readline())
         sleep(1)
         s -= 1
     return False
 
 
-def end(serialPort1):
-    if serialPort1.read() == b'0x4':
+def receive_blocks(serialPort1):
+    received = []
+    # index = 0
+    all_sent = False
+    print("check - receive blocks")
+    while not all_sent:
+        received.append(serialPort1.readline())
+        # received[index] = serialPort1.readline()
+        print(serialPort1.readline())
         serialPort1.write(b'0x6')
+        if serialPort1.read_all() == b'':
+            all_sent = True
+        # index += 1
+    if serialPort1.readline() == b'0x4':
+        serialPort1.write(b'0x6')
+    return received
 
 
 def main():
     serialPort1 = serial.Serial(
-        port="COM2", baudrate=9600, bytesize=8, timeout=2, stopbits=serial.STOPBITS_ONE
-    )   #odbiornik
+        port="COM1", baudrate=9600, bytesize=8, timeout=2, stopbits=serial.STOPBITS_ONE
+    )  # odbiornik
 
-    serialPort2 = serial.Serial(
-        port="COM3", baudrate=9600, bytesize=8, timeout=2, stopbits=serial.STOPBITS_ONE
-    )   #nadajnik
+    # serialPort2 = serial.Serial(
+    #     port="COM2", baudrate=9600, bytesize=8, timeout=2, stopbits=serial.STOPBITS_ONE
+    # )   #nadajnik
     connection = handshake_receiver(serialPort1, 60)
     if connection:
         print("Nawiązano połaczenie i rozpoczęto przesył")
     else:
         print("Nie nawiązano połączenia")
+    receive_blocks(serialPort1)
 
 
 main()
