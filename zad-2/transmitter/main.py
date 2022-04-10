@@ -29,7 +29,6 @@ def divide_into_blocks(content):
     string = ''
     for line in content:
         string += line
-    # content_b = serial.to_bytes(string)
     content_b = bytes(string, 'ascii')
     # data.append(content_b[:128])
     # data.append(content_b[128:256])
@@ -59,16 +58,32 @@ def divide_into_blocks(content):
     return data
 
 
-def send_blocks(serialPort2, blocks):
-    blocks.reverse()    #odwracamy by dopisac na poczatku
+def add_properties(blocks):
     index = 0
-    print(len(blocks))
     while index < len(blocks):
-        # blocks.append(b'0x1') ?
-        # blocks.append(b'index') ?
+        soh = bytes(0x1)
+        blocks[index] += soh
+        number = bytes(index + 1)
+        blocks[index] += number
+        index += 1
+    # for bl in blocks:
+    #     print(bl)
+    #     print("\n")
 
-    for bl in blocks:
-        serialPort2.write(bl)
+
+def send_blocks(serialPort2, blocks, start_with):
+    el = start_with
+    print(len(blocks))
+    while el < len(blocks):
+        serialPort2.write(blocks[el])
+        if serialPort2.write(b'0x15'):  #NAK
+            send_blocks(serialPort2, blocks, el)
+        elif serialPort2.write(b'0x6'): #ACK
+            el += 1
+
+    # print(serialPort1.read_all())
+    while serialPort2.read() != b'0x6':
+        serialPort2.write(b'0x4')   #EOT
 
 
 def main():
@@ -90,14 +105,16 @@ def main():
         content = file.readlines()
 
     data = divide_into_blocks(content)
-    # for x in data:
-    #     print(x)
-    #
+    for x in data:
+        print(x)
     # for x in data:
     #     print(len(x))
 
-
+    add_properties(data)
+    # for x in data:
+    #     print(x)
     send_blocks(serialPort2, data)
+
     # for el in data:
     #     serialPort2.write(el)
     print(serialPort1.read_all())

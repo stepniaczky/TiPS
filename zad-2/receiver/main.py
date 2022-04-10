@@ -10,6 +10,7 @@ from time import time, sleep
 # CAN = 0x18
 # C = 0x43
 
+
 def handshake_receiver(serialPort1, s):
     # send = 1
     start = time()
@@ -31,6 +32,12 @@ def handshake_receiver(serialPort1, s):
         sleep(1)
         s -= 1
     return False
+
+
+def end(serialPort1):
+    if serialPort1.read() == b'0x4':
+        serialPort1.write(b'0x6')
+
 
 def main():
     serialPort1 = serial.Serial(
