@@ -1,16 +1,16 @@
+from os.path import getsize
 import serial
 from time import time, sleep
 
-# nadajnik
-#
-# SOH = 0x1
-# EOT = 0x4
-# ACK = 0x6
-# NAK = 0x15
-# CAN = 0x18
-# C = 0x43
 
-NAK = bytes(0x15)
+# nadajnik
+
+SOH = b'0x1'
+EOT = b'0x4'
+ACK = b'0x6'
+NAK = b'0x15'
+CAN = b'0x18'
+C = b'0x43'
 
 
 def handshake_transmitter(serialPort2, s):
@@ -18,7 +18,7 @@ def handshake_transmitter(serialPort2, s):
         mins, secs = divmod(s, 60)
         ifNAK = serialPort2.readline()
         print(serialPort2.readline())
-        if ifNAK == b'0x15':
+        if ifNAK == NAK:
             return True
 
         # print(ifNAK)
@@ -27,37 +27,23 @@ def handshake_transmitter(serialPort2, s):
     return False
 
 
-def divide_into_blocks(content):
+def divide_into_blocks():
     data = []
-    string = ''
-    for line in content:
-        string += line
-    content_b = bytes(string, 'ascii')
-    # data.append(content_b[:128])
-    # data.append(content_b[128:256])
-    # data.append(content_b[256:384])
-    index = 0
-    byte = 128
-    all_filled = False
-    while not all_filled:
-        if byte == 128:
-            data.append(content_b[:byte])
-        elif byte > 128:
-            data.append(content_b[byte - 128:byte])
-        if len(data[index]) == 0:
-            all_filled = True
+    with open("message.txt", 'rb') as file:
+        size = getsize("message.txt")
+        blocks_numbers = size // 128 \
+            if size % 128 == 0 \
+            else (size // 128) + 1
 
-        if len(data[index]) < 128:
-            missing_bytes = 128 - len(data[index])
-            data_extended = b''
-            for i in range(missing_bytes):
-                data_extended += b' '
-
-            data[index] += data_extended
-            all_filled = True
-        # print(data[index])
-        index += 1
-        byte += 128
+        for block_number in range(blocks_numbers):
+            filled = False
+            block = bytearray(file.read(128))
+            if len(block) < 128:
+                while not filled:
+                    block.append(0x20)
+                    if len(block) == 128:
+                        filled = True
+            data.append(block)
     return data
 
 
@@ -80,14 +66,14 @@ def send_blocks(serialPort2, blocks, start_with):
     while el < len(blocks):
         serialPort2.write(blocks[el])
         print(el)
-        if serialPort2.write(b'0x6'):  # ACK
+        if serialPort2.read(1) == ACK:  # ACK
             el += 1
-        elif serialPort2.write(b'0x15'):  # NAK
+        elif serialPort2.read(1) == NAK:  # NAK b'0x15'
             send_blocks(serialPort2, blocks, el)
 
     # print(serialPort1.read_all())
-    while serialPort2.readline() != b'0x6':
-        serialPort2.write(b'0x4')  # EOT
+    while serialPort2.readline() != ACK:
+        serialPort2.write(EOT)  # EOT
         print("supa")
 
 
@@ -97,7 +83,7 @@ def main():
     # )  # odbiornik
 
     serialPort2 = serial.Serial(
-        port="COM2", baudrate=9600, bytesize=8, timeout=2, stopbits=serial.STOPBITS_ONE
+        port="COM3", baudrate=9600, bytesize=8, timeout=2, stopbits=serial.STOPBITS_ONE
     )  # nadajnik
 
     connetction = handshake_transmitter(serialPort2, 60)
@@ -106,10 +92,7 @@ def main():
     else:
         print("nie nawiazano polaczenia")
 
-    with open("message.txt") as file:
-        content = file.readlines()
-
-    data = divide_into_blocks(content)
+    data = divide_into_blocks()
     # for x in data:
     #     print(x)
     # for x in data:

@@ -3,20 +3,20 @@ from time import time, sleep
 
 
 # odbiornik
-#
-# SOH = 0x1
-# EOT = 0x4
-# ACK = 0x6
-# NAK = 0x15
-# CAN = 0x18
-# C = 0x43
+
+SOH = b'0x1'
+EOT = b'0x4'
+ACK = b'0x6'
+NAK = b'0x15'
+CAN = b'0x18'
+C = b'0x43'
 
 
 def handshake_receiver(serialPort1, s):
     while s:
         mins, secs = divmod(s, 60)
         if secs % 10 == 0:
-            serialPort1.write(b'0x15')
+            serialPort1.write(NAK)
         if serialPort1.read():
             return True
         print(serialPort1.readline())
@@ -30,19 +30,42 @@ def receive_blocks(serialPort1):
     all_sent = False
     print("check - receive blocks")
     while not all_sent:
-        received.append(serialPort1.readline())
-        print(serialPort1.readline())
-        serialPort1.write(b'0x6')
+        received_block = serialPort1.readline()
+        if algebraic_sum(received_block) != crc(received_block):
+            serialPort1.write(NAK)
+        else:
+            serialPort1.write(ACK)
+            received.append(serialPort1.readline())
         if serialPort1.read_all() == b'':
             all_sent = True
-    if serialPort1.readline() == b'0x4':
-        serialPort1.write(b'0x6')
+    if serialPort1.readline(1) == EOT:
+        serialPort1.write(ACK)
     return received
+
+
+def algebraic_sum(block):
+    s = 0
+    for byte in block:
+        s += byte
+    return s % 256
+
+
+def crc(block):
+    poly = 0x1021
+    crc = 0xFFFF
+    for i in range(len(block)):
+        crc ^= block[i] << 8
+        for j in range(8):
+            if (crc & 0x8000) > 0:
+                crc = (crc << 1) ^ poly
+            else:
+                crc = crc << 1
+    return crc & 0xFFFF
 
 
 def main():
     serialPort1 = serial.Serial(
-        port="COM1", baudrate=9600, bytesize=8, timeout=2, stopbits=serial.STOPBITS_ONE
+        port="COM2", baudrate=9600, bytesize=8, timeout=2, stopbits=serial.STOPBITS_ONE
     )  # odbiornik
 
     # serialPort2 = serial.Serial(
