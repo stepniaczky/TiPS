@@ -27,17 +27,14 @@ def handshake_receiver(serialPort1, s):
 
 def receive_blocks(serialPort1):
     received = []
-    # index = 0
     all_sent = False
     print("check - receive blocks")
     while not all_sent:
         received.append(serialPort1.readline())
-        # received[index] = serialPort1.readline()
         print(serialPort1.readline())
         serialPort1.write(b'0x6')
         if serialPort1.read_all() == b'':
             all_sent = True
-        # index += 1
     if serialPort1.readline() == b'0x4':
         serialPort1.write(b'0x6')
     return received
@@ -56,7 +53,10 @@ def main():
         print("Nawiązano połaczenie i rozpoczęto przesył")
     else:
         print("Nie nawiązano połączenia")
-    receive_blocks(serialPort1)
+    received = receive_blocks(serialPort1)
+    for x in received:
+        print(x)
 
 
-main()
+if __name__ == "__main__":
+    main()
