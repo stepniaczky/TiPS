@@ -31,7 +31,10 @@ def receive_blocks(serialPort1):
     print("check - receive blocks")
     while not all_sent:
         received_block = serialPort1.readline()
-        if algebraic_sum(received_block) != crc(received_block):
+        print(received_block)
+        received_check_sum = int.from_bytes(received_block[-1:],byteorder='big')
+        # int.from_bytes(received_block[-2:], byteorder="big")
+        if received_check_sum != algebraic_sum(received_block):
             serialPort1.write(NAK)
         else:
             serialPort1.write(ACK)
@@ -77,9 +80,11 @@ def main():
     else:
         print("Nie nawiązano połączenia")
     received = receive_blocks(serialPort1)
-    for x in received:
-        print(x)
-
+    # for x in received:
+    #     print(x)
+    with open("output.txt", "w") as txt_file:
+        for line in received:
+            txt_file.write(" ".join(line) + "\n")
 
 if __name__ == "__main__":
     main()

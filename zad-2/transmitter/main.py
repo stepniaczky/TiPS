@@ -54,6 +54,8 @@ def add_properties(blocks):
         blocks[index] += soh
         number = bytes(index + 1)
         blocks[index] += number
+        check_sum = algebraic_sum(blocks[index]).to_bytes(1, byteorder='big')
+        blocks.extend(check_sum)
         index += 1
     # for bl in blocks:
     #     print(bl)
@@ -75,6 +77,26 @@ def send_blocks(serialPort2, blocks, start_with):
     while serialPort2.readline() != ACK:
         serialPort2.write(EOT)  # EOT
         print("supa")
+
+
+def algebraic_sum(block):
+    s = 0
+    for byte in block:
+        s += byte
+    return s % 256
+
+
+def crc(block):
+    poly = 0x1021
+    crc = 0xFFFF
+    for i in range(len(block)):
+        crc ^= block[i] << 8
+        for j in range(8):
+            if (crc & 0x8000) > 0:
+                crc = (crc << 1) ^ poly
+            else:
+                crc = crc << 1
+    return crc & 0xFFFF
 
 
 def main():
