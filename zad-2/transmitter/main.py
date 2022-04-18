@@ -2,7 +2,6 @@ from os.path import getsize
 import serial
 from time import time, sleep
 
-
 # nadajnik
 
 SOH = b'0x1'
@@ -10,18 +9,17 @@ EOT = b'0x4'
 ACK = b'0x6'
 NAK = b'0x15'
 CAN = b'0x18'
-C = b'0x43'
+CRC = b'0x43'
 
 
-def handshake_transmitter(serialPort2, s):
+def handshake_transmitter(transmitter, s):
     while s:
-        mins, secs = divmod(s, 60)
-        ifNAK = serialPort2.readline()
-        print(serialPort2.readline())
-        if ifNAK == NAK:
-            return True
-
-        # print(ifNAK)
+        # mins, secs = divmod(s, 60)
+        answer = transmitter.read(1)
+        if answer == NAK:
+            return 1
+        elif answer == CRC:
+            return 2
         sleep(1)
         s -= 1
     return False
@@ -34,7 +32,6 @@ def divide_into_blocks():
         blocks_numbers = size // 128 \
             if size % 128 == 0 \
             else (size // 128) + 1
-
         for block_number in range(blocks_numbers):
             filled = False
             block = bytearray(file.read(128))
@@ -47,36 +44,40 @@ def divide_into_blocks():
     return data
 
 
-def add_properties(blocks):
-    index = 0
-    while index < len(blocks):
-        soh = bytes(0x1)
-        blocks[index] += soh
-        number = bytes(index + 1)
-        blocks[index] += number
-        check_sum = algebraic_sum(blocks[index]).to_bytes(1, byteorder='big')
-        blocks.extend(check_sum)
-        index += 1
-    # for bl in blocks:
-    #     print(bl)
-    #     print("\n")
+def add_properties(block, index, crc):
+    if crc:
+        checksum = crc_sum(block).to_bytes(2, byteorder='big')
+    else:
+        checksum = algebraic_sum(block).to_bytes(1, byteorder='big')
+    prepared = bytearray(SOH)
+    prepared.append(index)
+    prepared.append(255 - index)
+    prepared.extend(block)
+    prepared.extend(checksum)
+    return prepared
 
 
-def send_blocks(serialPort2, blocks, start_with):
-    el = start_with
-    # print(len(blocks))
-    while el < len(blocks):
-        serialPort2.write(blocks[el])
-        print(el)
-        if serialPort2.read(1) == ACK:  # ACK
-            el += 1
-        elif serialPort2.read(1) == NAK:  # NAK b'0x15'
-            send_blocks(serialPort2, blocks, el)
+def send_package(transmitter, package, index):
+    answer = b''
+    while answer != ACK:
+        transmitter.write(package)
+        answer = transmitter.read(1)
+        if answer == NAK:  # NAK b'0x15'
+            print("Send failed - package index: " + index)
+        elif answer == CAN:
+            transmitter.close()
+            return
 
-    # print(serialPort1.read_all())
-    while serialPort2.readline() != ACK:
-        serialPort2.write(EOT)  # EOT
-        print("supa")
+
+def close_connection(transmitter):
+    answer = transmitter.read(1)
+    while answer != ACK:
+        transmitter.write(EOT)
+        answer = transmitter.read(1)
+        if answer == CAN:
+            transmitter.close()
+            return
+    transmitter.close()
 
 
 def algebraic_sum(block):
@@ -86,7 +87,7 @@ def algebraic_sum(block):
     return s % 256
 
 
-def crc(block):
+def crc_sum(block):
     poly = 0x1021
     crc = 0xFFFF
     for i in range(len(block)):
@@ -104,15 +105,18 @@ def main():
     #     port="COM1", baudrate=9600, bytesize=8, timeout=2, stopbits=serial.STOPBITS_ONE
     # )  # odbiornik
 
-    serialPort2 = serial.Serial(
+    transmitter = serial.Serial(
         port="COM3", baudrate=9600, bytesize=8, timeout=2, stopbits=serial.STOPBITS_ONE
-    )  # nadajnik
-
-    connetction = handshake_transmitter(serialPort2, 60)
-    if connetction:
-        print("nawiazano polaczenie rozpoczeto przesyl danych")
+    )
+    type = handshake_transmitter(transmitter, 60)
+    is_crc = False
+    if type == 1:
+        print("Connection established")
+    elif type == 2:
+        print("Connection established - CRC type")
+        is_crc = True
     else:
-        print("nie nawiazano polaczenia")
+        print("Connection failed!")
 
     data = divide_into_blocks()
     # for x in data:
@@ -120,12 +124,17 @@ def main():
     # for x in data:
     #     print(len(x))
 
-    add_properties(data)
-    # for x in data:
+    for index, block in enumerate(data, 1):
+        index = index % 256
+        package = add_properties(block, index, is_crc)
+        send_package(transmitter, package, index)
+
+    close_connection(transmitter)
+    # for x in package:
     #     print(x)
-    send_blocks(serialPort2, data, 0)
+
     # for el in data:
-    #     serialPort2.write(el)
+    #     transmitter.write(el)
     # print(serialPort1.read_all())
 
 

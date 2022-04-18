@@ -12,37 +12,36 @@ CAN = b'0x18'
 C = b'0x43'
 
 
-def handshake_receiver(serialPort1, s):
+def handshake_receiver(receiver, s):
     while s:
         mins, secs = divmod(s, 60)
         if secs % 10 == 0:
-            serialPort1.write(NAK)
-        if serialPort1.read():
+            receiver.write(NAK)
+        if receiver.read():
             return True
-        print(serialPort1.readline())
+        print(receiver.readline())
         sleep(1)
         s -= 1
     return False
 
 
-def receive_blocks(serialPort1):
+def receive_blocks(receiver):
     received = []
     all_sent = False
     print("check - receive blocks")
     while not all_sent:
-        received_block = serialPort1.readline()
-        print(received_block)
-        received_check_sum = int.from_bytes(received_block[-1:],byteorder='big')
-        # int.from_bytes(received_block[-2:], byteorder="big")
-        if received_check_sum != algebraic_sum(received_block):
-            serialPort1.write(NAK)
+        received_package = receiver.readline()
+        print(received_package)
+        received_check_sum = int.from_bytes(received_package[-1:], byteorder='big')
+        if received_check_sum != algebraic_sum(received_package):
+            receiver.write(NAK)
         else:
-            serialPort1.write(ACK)
-            received.append(serialPort1.readline())
-        if serialPort1.read_all() == b'':
+            receiver.write(ACK)
+            received.append(receiver.readline())
+        if receiver.read_all() == b'':
             all_sent = True
-    if serialPort1.readline(1) == EOT:
-        serialPort1.write(ACK)
+    if receiver.readline(1) == EOT:
+        receiver.write(ACK)
     return received
 
 
@@ -67,24 +66,24 @@ def crc(block):
 
 
 def main():
-    serialPort1 = serial.Serial(
+    receiver = serial.Serial(
         port="COM2", baudrate=9600, bytesize=8, timeout=2, stopbits=serial.STOPBITS_ONE
     )  # odbiornik
 
     # serialPort2 = serial.Serial(
     #     port="COM2", baudrate=9600, bytesize=8, timeout=2, stopbits=serial.STOPBITS_ONE
     # )   #nadajnik
-    connection = handshake_receiver(serialPort1, 60)
+    connection = handshake_receiver(receiver, 60)
     if connection:
         print("Nawiązano połaczenie i rozpoczęto przesył")
     else:
         print("Nie nawiązano połączenia")
-    received = receive_blocks(serialPort1)
+    received = receive_blocks(receiver)
     # for x in received:
     #     print(x)
-    with open("output.txt", "w") as txt_file:
-        for line in received:
-            txt_file.write(" ".join(line) + "\n")
+    # with open("output.txt", "w") as txt_file:
+    #     for line in received:
+    #         txt_file.write(" ".join(line) + "\n")
 
 if __name__ == "__main__":
     main()
