@@ -15,14 +15,15 @@ CRC = b'0x43'
 def handshake_transmitter(transmitter, s):
     while s:
         # mins, secs = divmod(s, 60)
-        answer = transmitter.read(1)
+        answer = transmitter.read(4)
+        print(answer)
         if answer == NAK:
             return 1
         elif answer == CRC:
             return 2
         sleep(1)
         s -= 1
-    return False
+    return -1
 
 
 def divide_into_blocks():
@@ -37,7 +38,7 @@ def divide_into_blocks():
             block = bytearray(file.read(128))
             if len(block) < 128:
                 while not filled:
-                    block.append(0x20)
+                    block.append(0x40)
                     if len(block) == 128:
                         filled = True
             data.append(block)
@@ -60,24 +61,25 @@ def add_properties(block, index, crc):
 def send_package(transmitter, package, index):
     answer = b''
     while answer != ACK:
+        # transmitter.open()
         transmitter.write(package)
-        answer = transmitter.read(1)
+        answer = transmitter.read(4)
         if answer == NAK:  # NAK b'0x15'
             print("Send failed - package index: " + index)
         elif answer == CAN:
-            transmitter.close()
+            # transmitter.close()
             return
 
 
 def close_connection(transmitter):
-    answer = transmitter.read(1)
+    answer = transmitter.read(4)
     while answer != ACK:
         transmitter.write(EOT)
-        answer = transmitter.read(1)
+        answer = transmitter.read(4)
         if answer == CAN:
-            transmitter.close()
+            # transmitter.close()
             return
-    transmitter.close()
+    # transmitter.close()
 
 
 def algebraic_sum(block):
@@ -108,6 +110,7 @@ def main():
     transmitter = serial.Serial(
         port="COM3", baudrate=9600, bytesize=8, timeout=2, stopbits=serial.STOPBITS_ONE
     )
+
     type = handshake_transmitter(transmitter, 60)
     is_crc = False
     if type == 1:
@@ -117,25 +120,26 @@ def main():
         is_crc = True
     else:
         print("Connection failed!")
+        transmitter.close()
+        return
 
     data = divide_into_blocks()
-    # for x in data:
-    #     print(x)
-    # for x in data:
-    #     print(len(x))
-
     for index, block in enumerate(data, 1):
         index = index % 256
         package = add_properties(block, index, is_crc)
         send_package(transmitter, package, index)
 
     close_connection(transmitter)
+    # transmitter.close()
     # for x in package:
     #     print(x)
-
     # for el in data:
     #     transmitter.write(el)
     # print(serialPort1.read_all())
+    # for x in data:
+    #     print(x)
+    # for x in data:
+    #     print(len(x))
 
 
 if __name__ == "__main__":

@@ -1,7 +1,6 @@
 import serial
 from time import time, sleep
 
-
 # odbiornik
 
 SOH = b'0x1'
@@ -9,39 +8,65 @@ EOT = b'0x4'
 ACK = b'0x6'
 NAK = b'0x15'
 CAN = b'0x18'
-C = b'0x43'
+CRC = b'0x43'  # C
 
 
-def handshake_receiver(receiver, s):
+def handshake_receiver(receiver, s, is_crc):
+    answer = b''
     while s:
         mins, secs = divmod(s, 60)
-        if secs % 10 == 0:
-            receiver.write(NAK)
-        if receiver.read():
+        answer = receiver.read(4)
+        if is_crc:
+            if secs % 10 == 0:
+                receiver.write(CRC)
+                print("CRC")
+        else:
+            if secs % 10 == 0:
+                receiver.write(NAK)
+                print("NAK")
+        if answer == SOH:
             return True
-        print(receiver.readline())
+        elif answer != b'':
+            return True
+        print(receiver.read())
         sleep(1)
         s -= 1
     return False
 
 
-def receive_blocks(receiver):
-    received = []
-    all_sent = False
-    print("check - receive blocks")
-    while not all_sent:
-        received_package = receiver.readline()
-        print(received_package)
-        received_check_sum = int.from_bytes(received_package[-1:], byteorder='big')
-        if received_check_sum != algebraic_sum(received_package):
-            receiver.write(NAK)
+def receive_blocks(receiver, package_size, index, is_crc):
+    received = bytearray()
+    answer = b''
+    while answer != EOT:
+        is_okay = True
+        received_package = receiver.readline(package_size - 1)
+        if is_crc:
+            checksum_bytes = received_package[-2:]
+            received_checksum = int.from_bytes(checksum_bytes, byteorder='big')
         else:
+            checksum_bytes = received_package[-1:]
+            received_checksum = int.from_bytes(checksum_bytes, byteorder='big')
+        received_block = received_package[2: 130]
+        received_index = received_package[0]
+        received_supplement = received_package[1]
+        if index != received_index or received_supplement != 255 - received_index:
+            receiver.write(CAN)
+            is_okay = False
+            return
+        if is_crc:
+            checksum = crc(received_block)
+        else:
+            checksum = algebraic_sum(received_block)
+        if checksum != received_checksum:
+            receiver.write(NAK)
+            is_okay = False
+        if is_okay:
+            received.extend(received_block)
             receiver.write(ACK)
-            received.append(receiver.readline())
-        if receiver.read_all() == b'':
-            all_sent = True
-    if receiver.readline(1) == EOT:
-        receiver.write(ACK)
+            answer = receiver.read(3)
+            if answer != b'':
+                print("ok")
+    receiver.write(ACK)
     return received
 
 
@@ -65,25 +90,50 @@ def crc(block):
     return crc & 0xFFFF
 
 
+def choice():
+    print("Use CRC?")
+    try:
+        answer = input("Y/N --- ")
+        if answer in ["yes", "Y", "y", "tak", "Yes", "Tak", "YES", "TAK"]:
+            return True
+        elif answer in ["no", "N", "n", "nie", "No", "Nie", "NO", "NIE"]:
+            return False
+        print("dudud")
+    except ValueError:
+        print("An invalid value has been entered!")
+
+
 def main():
     receiver = serial.Serial(
         port="COM2", baudrate=9600, bytesize=8, timeout=2, stopbits=serial.STOPBITS_ONE
     )  # odbiornik
-
+    # receiver.open()
     # serialPort2 = serial.Serial(
     #     port="COM2", baudrate=9600, bytesize=8, timeout=2, stopbits=serial.STOPBITS_ONE
     # )   #nadajnik
-    connection = handshake_receiver(receiver, 60)
-    if connection:
-        print("Nawiązano połaczenie i rozpoczęto przesył")
+    is_crc = choice()
+    if is_crc:
+        package_size = 133
     else:
-        print("Nie nawiązano połączenia")
-    received = receive_blocks(receiver)
+        package_size = 132
+    index = 1
+    data = bytearray()
+    connection = handshake_receiver(receiver, 60, is_crc)
+    if connection:
+        print("Connection established")
+        data = receive_blocks(receiver, package_size, index, is_crc)
+        # with open("output.txt", "wb") as txt_file:
+        #     for line in data:
+        #         txt_file.write(line)
+    else:
+        print("Connection failed!")
+    receiver.close()
     # for x in received:
     #     print(x)
     # with open("output.txt", "w") as txt_file:
     #     for line in received:
     #         txt_file.write(" ".join(line) + "\n")
+
 
 if __name__ == "__main__":
     main()
