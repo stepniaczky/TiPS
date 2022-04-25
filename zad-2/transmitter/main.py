@@ -64,6 +64,7 @@ def send_package(transmitter, package, index):
         # transmitter.open()
         transmitter.write(package)
         answer = transmitter.read(4)
+        print("sending")
         if answer == NAK:  # NAK b'0x15'
             print("Send failed - package index: " + index)
         elif answer == CAN:
@@ -108,26 +109,28 @@ def main():
     # )  # odbiornik
 
     transmitter = serial.Serial(
-        port="COM3", baudrate=9600, bytesize=8, timeout=2, stopbits=serial.STOPBITS_ONE
+        port="COM2", baudrate=9600, bytesize=8, timeout=2, stopbits=serial.STOPBITS_ONE
     )
 
-    type = handshake_transmitter(transmitter, 60)
+    # type = handshake_transmitter(transmitter, 60)
     is_crc = False
-    if type == 1:
-        print("Connection established")
-    elif type == 2:
-        print("Connection established - CRC type")
-        is_crc = True
-    else:
-        print("Connection failed!")
-        transmitter.close()
-        return
+    # if type == 1:
+    #     print("Connection established")
+    # elif type == 2:
+    #     print("Connection established - CRC type")
+    #     is_crc = True
+    # else:
+    #     print("Connection failed!")
+    #     transmitter.close()
+    #     return
 
     data = divide_into_blocks()
     for index, block in enumerate(data, 1):
         index = index % 256
         package = add_properties(block, index, is_crc)
+        # print(package)
         send_package(transmitter, package, index)
+
 
     close_connection(transmitter)
     # transmitter.close()
