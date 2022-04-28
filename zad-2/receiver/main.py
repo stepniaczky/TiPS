@@ -39,7 +39,8 @@ def receive_blocks(receiver, package_size, index, is_crc):
     answer = b''
     while answer != EOT:
         is_okay = True
-        received_package = receiver.readline(package_size - 1)
+        received_package = receiver.read(package_size - 1)
+        # received_package = receiver.readline(package_size - 1)
         if is_crc:
             checksum_bytes = received_package[-2:]
             received_checksum = int.from_bytes(checksum_bytes, byteorder='big')
@@ -49,6 +50,10 @@ def receive_blocks(receiver, package_size, index, is_crc):
         received_block = received_package[2: 130]
         received_index = received_package[0]
         received_supplement = received_package[1]
+        # print(received_block)
+        # print(received_index)
+        # print(received_supplement)
+        # print(received_package)
         if index != received_index or received_supplement != 255 - received_index:
             receiver.write(CAN)
             is_okay = False
@@ -67,6 +72,7 @@ def receive_blocks(receiver, package_size, index, is_crc):
             if answer != b'':
                 print("ok")
     receiver.write(ACK)
+    print(received)
     return received
 
 
@@ -98,14 +104,15 @@ def choice():
             return True
         elif answer in ["no", "N", "n", "nie", "No", "Nie", "NO", "NIE"]:
             return False
-        print("dudud")
+        print("Invalid input!")
+        return choice()
     except ValueError:
         print("An invalid value has been entered!")
 
 
 def main():
     receiver = serial.Serial(
-        port="COM2", baudrate=9600, bytesize=8, timeout=2, stopbits=serial.STOPBITS_ONE
+        port="COM1", baudrate=9600, bytesize=8, timeout=2, stopbits=serial.STOPBITS_ONE
     )  # odbiornik
     # receiver.open()
     # serialPort2 = serial.Serial(
@@ -121,13 +128,19 @@ def main():
     connection = handshake_receiver(receiver, 60, is_crc)
     if connection:
         print("Connection established")
+        le = 5
+        # for i in range(le):
         data = receive_blocks(receiver, package_size, index, is_crc)
+        print(data)
         # with open("output.txt", "wb") as txt_file:
         #     for line in data:
         #         txt_file.write(line)
     else:
         print("Connection failed!")
-    receiver.close()
+
+    # data = receive_blocks(receiver, package_size, index, is_crc)
+
+    # receiver.close()
     # for x in received:
     #     print(x)
     # with open("output.txt", "w") as txt_file:
