@@ -1,5 +1,26 @@
 from socket import AF_INET, SOCK_DGRAM, socket
-#from huffman import decoding
+from os import mkdir, path
+from datetime import datetime
+
+
+def save_and_log(client_ip_address, received_data):
+    if not path.exists("data"):
+        mkdir("data")
+    if not path.exists("data/server"):
+        mkdir("data/server")
+
+    current_time = datetime.now()
+    file_time = current_time.strftime("%d-%m-%Y-%H-%M-%S")
+    log_time = current_time.strftime("%d-%m-%Y %H:%M:%S")
+
+    dir_path = f"data/server/{client_ip_address}"
+    if not path.exists(dir_path):
+        mkdir(dir_path)
+
+    with open(f"{dir_path}/{file_time}.txt", "w") as file:
+        file.write(received_data)
+    print(f"{log_time}  Data from {client_ip_address} has been "
+          f"successfully received and written to the file")
 
 
 class SocketSide:
@@ -20,7 +41,6 @@ class Client(SocketSide):
         self.s.close()
 
     def send(self, file):
-        # server = ('192.168.0.104', 4000)
         self.s.send(file.encode('utf-8'))
         self.s.send('END'.encode('utf-8'))
         received_from_server = self.s.recv(1024).decode('utf-8')
@@ -28,32 +48,23 @@ class Client(SocketSide):
 
 
 class Server(SocketSide):
-    clientConnection, clientAddress = None, None
-    received_text = ""
 
     def __init__(self, ip, port):
         super().__init__(ip, port)
-        # self.serverSocket = socket.socket(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        self.serverSocket = socket()
 
-    def listen(self):
-        # self.serverSocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)  # czy to potrzebne
-        self.serverSocket.bind((self.ip, self.port))
-        self.serverSocket.listen()
-        (self.clientConnection, self.clientAddress) = self.serverSocket.accept()
+    def start(self):
+        received_data = ""
+        self.s.bind((self.ip, self.port))
 
-    def receive(self):
-        while True:
-            data = self.clientConnection.recv(1024).decode()
-            if data == "END":
-                msg = "Odpowiedz serwera:\nTransfer udany, zakanczanie polaczenia!"
-                msgBytes = str.encode(msg)
-                self.clientConnection.send(msgBytes)
-                print("\nConnection closed.\n")
-                break
-            self.received_text += data
-        return self.received_text
-        #decoded_text = decoding(self.received_text)
-        #return decoded_text
+        try:
+            while True:
+                (client_data, client_address) = self.s.recvfrom(1024)
+                client_data = client_data.decode('utf-8')
+                if client_data == "END":
+                    self.s.sendto(client_data.encode('utf-8'), client_address)
+                    save_and_log(client_address[0], received_data)
 
-
+                received_data += client_data
+        except KeyboardInterrupt:
+            self.s.close()
+            return

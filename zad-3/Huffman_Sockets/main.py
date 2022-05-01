@@ -1,5 +1,14 @@
-import os
+from os import name, path, mkdir
 from model import Client, Server
+from subprocess import call
+
+
+def clear():
+    # check and make call for specific operating system
+    try:
+        _ = call('clear' if name == 'posix' else 'cls')
+    except FileNotFoundError:
+        print("Clear command is available only for os shell/terminal")
 
 
 def validate_int(msg):
@@ -11,13 +20,13 @@ def validate_int(msg):
         return validate_int(msg)
 
 
-def save(filename, msg):
-    with open(f"data/{filename}", "w") as file:
-        file.write(msg)
-
-
 def load(filename):
-    with open(f"data/{filename}") as file:
+    dir_path = "data/client"
+    if not path.exists("data"):
+        mkdir("data")
+    if not path.exists(dir_path):
+        mkdir(dir_path)
+    with open(f"{dir_path}/{filename}") as file:
         arr = file.read()
     return arr
 
@@ -25,37 +34,29 @@ def load(filename):
 def server():
     port = int
     ip = str
-    s = None
     setup_flag = False
-    connection_flag = False
-    clientConnection, clientAddress = None, None
-    received_text = None
     while True:
         command = input("server>")
         if command not in "exit" "clear":
             print()
         match command.split():
             case ["setup"]:
-                port = int(input("port: "))
                 ip = input("ip address: ")
+                port = int(input("port: "))
                 setup_flag = True
-            case ["listen"]:  # dodac jakis czas po ktorym nastepuje przerwanie nasluchiwania
-                s = Server(ip, port)
-                s.listen()
-                received_text = s.receive()
-                # moze jeszcze wyswietle ten tekst na konsoli
-                filename = input("Type the file name to save the received text: ")
-                if filename.__contains__(".txt"):
-                    save(f"data/{filename}", received_text)
+            case ["start"]:
+                if setup_flag is True:
+                    s = Server(ip, port)
+                    s.start()
                 else:
-                    save(f"data/{filename}.txt", received_text)
+                    print("Firstly, configure the socket to listen!")
             case ["exit"]:
                 return
             case ["clear"]:
-                os.system("cls")
+                clear()
             case ["help"]:
-                print("setup", "connect", "disconnect", "send <filename>",
-                      "clear", "exit", "help", sep="\n")
+                print("setup", "start", "clear",
+                      "exit", "help", sep="\n")
             case _:
                 print("Unknown command.")
                 print("Type 'help' to see available commands.")
@@ -88,28 +89,33 @@ def client():
                     except TimeoutError:
                         print("Timeout error")
                     except ConnectionRefusedError:
-                        print("Connection refused error")
+                        print("Connection refused error.")
 
                     # sending data after establishing a connection with the server
                     if connection_flag is True:
-                        file = load(filename)
-                        operation_flag = s.send(file)
-                        if operation_flag is True:
-                            print("File was received correctly by server")
-                        else:
-                            print("An error occurred while sending file to the server")
+                        try:
+                            if not filename.__contains__(".txt"):
+                                filename = f"{filename}.txt"
+                            file = load(filename)
+                            operation_flag = s.send(file)
+                            if operation_flag is True:
+                                print("File has been successfully received by server.")
+                            else:
+                                print("An error occurred while sending file to the server.")
+                        except FileNotFoundError:
+                            print(f"File with name '{filename}' does not exist!")
 
                         # disconnecting phase
                         s.disconnect()
-                        print("You are disconnected from the server")
+                        print("You are disconnected from the server.")
 
                 else:
-                    print("Setup your connection before establishing a connection.")
+                    print("Configure the server socket before establishing a connection.")
 
             case ["exit"]:
                 return
             case ["clear"]:
-                os.system("cls")
+                clear()
             case ["help"]:
                 print("setup", "send <filename>", "clear",
                       "exit", "help", sep="\n")
@@ -131,7 +137,7 @@ def main(command):
         case ["exit"]:
             quit()
         case ["clear"]:
-            os.system("cls")
+            clear()
         case ["help"]:
             print("server", "client", "clear", "exit", "help", sep="\n")
         case _:
