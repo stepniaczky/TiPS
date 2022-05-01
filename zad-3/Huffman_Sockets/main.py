@@ -18,7 +18,7 @@ def save(filename, msg):
 
 def load(filename):
     with open(f"data/{filename}") as file:
-        arr = file.readlines()
+        arr = file.read()
     return arr
 
 
@@ -74,15 +74,17 @@ def client():
         if command not in "exit" "clear":
             print()
         match command.split():
-            case ["setup"]:  # albo connection setup
-                ip = input("ip address: ")
-                port = validate_int("port: ")
+            case ["setup"]:
+                ip = input("server ip address: ")
+                port = validate_int("server port: ")
                 setup_flag = True
             case ["connect"]:
                 if setup_flag is True:
                     s = Client(ip, port)
                     try:
                         s.connect()
+                        connection_flag = True
+                        print(f"You are now connected to server: ({ip}, {port})")
                     except TimeoutError:
                         print("Timeout error")
                     except ConnectionRefusedError:
@@ -92,11 +94,16 @@ def client():
             case ["disconnect"]:
                 if connection_flag is True:
                     s.disconnect()
+                    print("You are now disconnected from the server")
                 else:
                     print("You are not connected to any server.")
             case ["send", filename]:
                 file = load(filename)
-                s.send(file)
+                operation_flag = s.send(file)
+                if operation_flag is True:
+                    print("File was received correctly by server")
+                else:
+                    print("An error occurred while sending file to the server")
             case ["exit"]:
                 return
             case ["clear"]:

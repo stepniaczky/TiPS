@@ -1,4 +1,4 @@
-import socket
+from socket import AF_INET, SOCK_DGRAM, socket
 #from huffman import decoding
 
 
@@ -6,21 +6,25 @@ class SocketController:
     def __init__(self, ip, port):
         self.ip = ip
         self.port = port
+        self.s = socket(AF_INET, SOCK_DGRAM)
 
 
 class Client(SocketController):
     def __init__(self, ip, port):
         super().__init__(ip, port)
-        self.clientSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
     def connect(self):
-        self.clientSocket.connect((self.ip, self.port))
+        self.s.connect((self.ip, self.port))
 
     def disconnect(self):
-        self.clientSocket.close()
+        self.s.close()
 
     def send(self, file):
-        pass
+        # server = ('192.168.0.104', 4000)
+        self.s.send(file.encode('utf-8'))
+        self.s.send('END'.encode('utf-8'))
+        received_from_server = self.s.recv(1024).decode('utf-8')
+        return True if received_from_server == 'END' else False
 
 
 class Server(SocketController):
@@ -30,7 +34,7 @@ class Server(SocketController):
     def __init__(self, ip, port):
         super().__init__(ip, port)
         # self.serverSocket = socket.socket(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        self.serverSocket = socket.socket()
+        self.serverSocket = socket()
 
     def listen(self):
         # self.serverSocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)  # czy to potrzebne
