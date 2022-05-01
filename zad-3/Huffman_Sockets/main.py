@@ -1,6 +1,5 @@
 import os
-from model import Client, SocketController, Server
-#from huffman import *
+from model import Client, Server
 
 
 def validate_int(msg):
@@ -8,6 +7,7 @@ def validate_int(msg):
         test = int(input(msg))
         return test
     except ValueError:
+        print("Port number must be an integer!")
         return validate_int(msg)
 
 
@@ -66,7 +66,6 @@ def server():
 def client():
     port = int
     ip = str
-    s = None
     setup_flag = False
     connection_flag = False
     while True:
@@ -78,39 +77,42 @@ def client():
                 ip = input("server ip address: ")
                 port = validate_int("server port: ")
                 setup_flag = True
-            case ["connect"]:
+            case ["send", filename]:
+                # connecting phase
                 if setup_flag is True:
                     s = Client(ip, port)
                     try:
                         s.connect()
                         connection_flag = True
-                        print(f"You are now connected to server: ({ip}, {port})")
+                        print(f"You are connected to the server: ({ip}, {port})")
                     except TimeoutError:
                         print("Timeout error")
                     except ConnectionRefusedError:
                         print("Connection refused error")
+
+                    # sending data after establishing a connection with the server
+                    if connection_flag is True:
+                        file = load(filename)
+                        operation_flag = s.send(file)
+                        if operation_flag is True:
+                            print("File was received correctly by server")
+                        else:
+                            print("An error occurred while sending file to the server")
+
+                        # disconnecting phase
+                        s.disconnect()
+                        print("You are disconnected from the server")
+
                 else:
                     print("Setup your connection before establishing a connection.")
-            case ["disconnect"]:
-                if connection_flag is True:
-                    s.disconnect()
-                    print("You are now disconnected from the server")
-                else:
-                    print("You are not connected to any server.")
-            case ["send", filename]:
-                file = load(filename)
-                operation_flag = s.send(file)
-                if operation_flag is True:
-                    print("File was received correctly by server")
-                else:
-                    print("An error occurred while sending file to the server")
+
             case ["exit"]:
                 return
             case ["clear"]:
                 os.system("cls")
             case ["help"]:
-                print("setup", "connect", "disconnect", "send <filename>",
-                      "clear", "exit", "help", sep="\n")
+                print("setup", "send <filename>", "clear",
+                      "exit", "help", sep="\n")
             case _:
                 print("Unknown command.")
                 print("Type 'help' to see available commands.")

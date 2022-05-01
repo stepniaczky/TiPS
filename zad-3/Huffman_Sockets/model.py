@@ -2,14 +2,14 @@ from socket import AF_INET, SOCK_DGRAM, socket
 #from huffman import decoding
 
 
-class SocketController:
+class SocketSide:
     def __init__(self, ip, port):
         self.ip = ip
         self.port = port
         self.s = socket(AF_INET, SOCK_DGRAM)
 
 
-class Client(SocketController):
+class Client(SocketSide):
     def __init__(self, ip, port):
         super().__init__(ip, port)
 
@@ -27,7 +27,7 @@ class Client(SocketController):
         return True if received_from_server == 'END' else False
 
 
-class Server(SocketController):
+class Server(SocketSide):
     clientConnection, clientAddress = None, None
     received_text = ""
 
