@@ -69,7 +69,11 @@ def send_package(transmitter, package, index):
         # transmitter.open()
         transmitter.write(package)
         answer = transmitter.read(4)
+<<<<<<< HEAD
         print(str(serialPort1.read()) + "ddd")
+=======
+        print("sending")
+>>>>>>> 8e67110ec6da87fb8e0f84d11c52dd100e6fec3d
         if answer == NAK:  # NAK b'0x15'
             print("Send failed - package index: " + index)
         elif answer == CAN:
@@ -112,7 +116,7 @@ def main():
 
 
     transmitter = serial.Serial(
-        port="COM3", baudrate=9600, bytesize=8, timeout=2, stopbits=serial.STOPBITS_ONE
+        port="COM2", baudrate=9600, bytesize=8, timeout=2, stopbits=serial.STOPBITS_ONE
     )
 
     # type = handshake_transmitter(transmitter, 60)
@@ -131,7 +135,9 @@ def main():
     for index, block in enumerate(data, 1):
         index = index % 256
         package = add_properties(block, index, is_crc)
+        # print(package)
         send_package(transmitter, package, index)
+
 
     close_connection(transmitter)
     # transmitter.close()
