@@ -8,11 +8,14 @@ class Node:
 
 
 class Huffman:
-    def __init__(self, data='', _dict={}):
+    def __init__(self, data='', _dict=None):
+        if _dict is None:
+            _dict = {}
         self.data = data
         self.sign_freq = _dict
         self.encoded_dict = {}
         self.decoded_data = []
+        self.tree_root = None
 
     def calc_freq(self, data):
         for i in data:
