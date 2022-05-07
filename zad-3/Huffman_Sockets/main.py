@@ -18,7 +18,7 @@ def clear():
     try:
         _ = call('clear' if os.name == 'posix' else 'cls')
     except FileNotFoundError:
-        print("Clear command is available only for os shell/terminal")
+        print("\nClear command is available only for os shell/terminal\n")
 
 
 def validate_int(msg):
@@ -46,8 +46,13 @@ def server():
     ip = str
     setup_flag = False
     while True:
-        command = input("server>")
-        if command not in "exit" "clear":
+        command = ""
+        try:
+            command = input("server>")
+        except KeyboardInterrupt:
+            print('\n^C', end='')
+            quit()
+        if command not in ["exit", "clear"]:
             print()
         match command.split():
             case ["setup"]:
@@ -70,7 +75,7 @@ def server():
             case _:
                 print("Unknown command.")
                 print("Type 'help' to see available commands.")
-        if command not in "exit" "clear":
+        if command not in ["exit", "clear"]:
             print()
 
 
@@ -80,8 +85,13 @@ def client():
     setup_flag = False
     connection_flag = False
     while True:
-        command = input("client>")
-        if command not in "exit" "clear":
+        command = ""
+        try:
+            command = input("client>")
+        except KeyboardInterrupt:
+            print('\n^C', end='')
+            quit()
+        if command not in ["exit", "clear"]:
             print()
         match command.split():
             case ["setup"]:
@@ -125,6 +135,8 @@ def client():
                                 compression_ratio = round(100 / (before / after), 2)
                                 print(f'Size of transmitted file is {compression_ratio}% of the'
                                       f' original ASCII file.')
+                                os.remove('data/client/test1.txt')
+                                os.remove('data/client/test2.txt')
                             else:
                                 print("An error occurred while sending file to the server.")
                         except FileNotFoundError:
@@ -147,12 +159,12 @@ def client():
             case _:
                 print("Unknown command.")
                 print("Type 'help' to see available commands.")
-        if command not in "exit" "clear":
+        if command not in ["exit", "clear"]:
             print()
 
 
 def main(command):
-    if command not in "server" "client" "exit" "clear":
+    if command not in ["server", "client", "exit", "clear"]:
         print()
     match command.split():
         case ["server"]:
@@ -168,10 +180,14 @@ def main(command):
         case _:
             print("Unknown command.")
             print("Type 'help' to see available commands.")
-    if command not in "server" "client" "exit" "clear":
+    if command not in ["server", "client", "exit", "clear"]:
         print()
 
 
 if __name__ == "__main__":
     while True:
-        main(input("$>"))
+        try:
+            main(input("$>"))
+        except KeyboardInterrupt:
+            print('\n^C', end='')
+            quit()

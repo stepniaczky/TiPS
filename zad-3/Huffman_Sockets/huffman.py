@@ -70,7 +70,6 @@ class Huffman:
     def decode(self):
         self.create_tree()
         i = -1
-        print(self.decoded_data)
         while (i + 1) < len(self.data):
             i = self.search(self.tree_root, i)
 
