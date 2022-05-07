@@ -8,14 +8,11 @@ class Node:
 
 
 class Huffman:
-    encoded_dict = {}
-    decoded_data = []
-    sign_freq = {}
-    data = ''
-
-    def __init__(self, data, tree_root = None):
+    def __init__(self, data='', _dict={}):
         self.data = data
-        self.tree_root = tree_root
+        self.sign_freq = _dict
+        self.encoded_dict = {}
+        self.decoded_data = []
 
     def calc_freq(self, data):
         for i in data:
@@ -63,16 +60,20 @@ class Huffman:
     def search(self, node, i):
         if node.left is None and node.right is None:
             self.decoded_data.append(node.symbol)
-            if i + 1 < len(self.data):
-                self.search(self.tree_root, i)
+            return i
         else:
             if self.data[i + 1] == '0':
-                self.search(node.left, i + 1)
+                return self.search(node.left, i + 1)
             else:
-                self.search(node.right, i + 1)
+                return self.search(node.right, i + 1)
 
     def decode(self):
-        self.search(self.tree_root, -1)
+        self.create_tree()
+        i = -1
+        print(self.decoded_data)
+        while (i + 1) < len(self.data):
+            i = self.search(self.tree_root, i)
+
         result = ''
         for sign in self.decoded_data:
             result += sign

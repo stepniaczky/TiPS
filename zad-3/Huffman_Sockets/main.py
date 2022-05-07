@@ -1,12 +1,22 @@
-from os import name, path, mkdir
 from model import Client, Server
+from huffman import Huffman
 from subprocess import call
+import os
+
+
+def toBinary(a):
+    l, m = [], []
+    for i in a:
+        l.append(ord(i))
+    for i in l:
+        m.append(bin(i)[2:])
+    return ''.join(m)
 
 
 def clear():
     # check and make call for specific operating system
     try:
-        _ = call('clear' if name == 'posix' else 'cls')
+        _ = call('clear' if os.name == 'posix' else 'cls')
     except FileNotFoundError:
         print("Clear command is available only for os shell/terminal")
 
@@ -22,10 +32,10 @@ def validate_int(msg):
 
 def load(filename):
     dir_path = "data/client"
-    if not path.exists("data"):
-        mkdir("data")
-    if not path.exists(dir_path):
-        mkdir(dir_path)
+    if not os.path.exists("data"):
+        os.mkdir("data")
+    if not os.path.exists(dir_path):
+        os.mkdir(dir_path)
     with open(f"{dir_path}/{filename}") as file:
         arr = file.read()
     return arr
@@ -97,9 +107,24 @@ def client():
                             if not filename.__contains__(".txt"):
                                 filename = f"{filename}.txt"
                             file = load(filename)
-                            operation_flag = s.send(file)
+                            h = Huffman(file)
+                            encoded = h.encode()
+                            _dict = f"{h.sign_freq}"
+                            operation_flag = s.send(_dict, encoded)
                             if operation_flag is True:
                                 print("File has been successfully received by server.")
+
+                                with open('data/client/test1.txt', "w") as test1:
+                                    test1.write(toBinary(file))
+                                before = os.path.getsize(f'data/client/test1.txt')
+
+                                with open('data/client/test2.txt', "w") as test2:
+                                    test2.write(encoded)
+                                after = os.path.getsize('data/client/test2.txt')
+
+                                compression_ratio = round(100 / (before / after), 2)
+                                print(f'Size of transmitted file is {compression_ratio}% of the'
+                                      f' original ASCII file.')
                             else:
                                 print("An error occurred while sending file to the server.")
                         except FileNotFoundError:
