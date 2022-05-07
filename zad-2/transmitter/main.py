@@ -12,6 +12,11 @@ CAN = b'0x18'
 CRC = b'0x43'
 
 
+serialPort1 = serial.Serial(
+        port="COM1", baudrate=9600, bytesize=8, timeout=2, stopbits=serial.STOPBITS_ONE
+    )  # odbiornik
+
+
 def handshake_transmitter(transmitter, s):
     while s:
         # mins, secs = divmod(s, 60)
@@ -64,7 +69,11 @@ def send_package(transmitter, package, index):
         # transmitter.open()
         transmitter.write(package)
         answer = transmitter.read(4)
+<<<<<<< HEAD
+        print(str(serialPort1.read()) + "ddd")
+=======
         print("sending")
+>>>>>>> 8e67110ec6da87fb8e0f84d11c52dd100e6fec3d
         if answer == NAK:  # NAK b'0x15'
             print("Send failed - package index: " + index)
         elif answer == CAN:
@@ -104,9 +113,7 @@ def crc_sum(block):
 
 
 def main():
-    # serialPort1 = serial.Serial(
-    #     port="COM1", baudrate=9600, bytesize=8, timeout=2, stopbits=serial.STOPBITS_ONE
-    # )  # odbiornik
+
 
     transmitter = serial.Serial(
         port="COM2", baudrate=9600, bytesize=8, timeout=2, stopbits=serial.STOPBITS_ONE

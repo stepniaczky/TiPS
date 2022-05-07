@@ -47,13 +47,16 @@ def receive_blocks(receiver, package_size, index, is_crc):
         else:
             checksum_bytes = received_package[-1:]
             received_checksum = int.from_bytes(checksum_bytes, byteorder='big')
-        received_block = received_package[2: 130]
         received_index = received_package[0]
         received_supplement = received_package[1]
+<<<<<<< HEAD
+        received_block = received_package[2: 130]
+=======
         # print(received_block)
         # print(received_index)
         # print(received_supplement)
         # print(received_package)
+>>>>>>> 8e67110ec6da87fb8e0f84d11c52dd100e6fec3d
         if index != received_index or received_supplement != 255 - received_index:
             receiver.write(CAN)
             is_okay = False
@@ -115,9 +118,6 @@ def main():
         port="COM1", baudrate=9600, bytesize=8, timeout=2, stopbits=serial.STOPBITS_ONE
     )  # odbiornik
     # receiver.open()
-    # serialPort2 = serial.Serial(
-    #     port="COM2", baudrate=9600, bytesize=8, timeout=2, stopbits=serial.STOPBITS_ONE
-    # )   #nadajnik
     is_crc = choice()
     if is_crc:
         package_size = 133
