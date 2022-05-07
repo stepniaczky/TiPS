@@ -49,18 +49,18 @@ def receive_blocks(receiver, package_size, index, is_crc):
             received_checksum = int.from_bytes(checksum_bytes, byteorder='big')
         received_index = received_package[0]
         received_supplement = received_package[1]
-<<<<<<< HEAD
-        received_block = received_package[2: 130]
-=======
-        # print(received_block)
-        # print(received_index)
-        # print(received_supplement)
-        # print(received_package)
->>>>>>> 8e67110ec6da87fb8e0f84d11c52dd100e6fec3d
-        if index != received_index or received_supplement != 255 - received_index:
-            receiver.write(CAN)
-            is_okay = False
-            return
+        received_block = received_package[0: 128]
+
+        print("received block: " + str(received_block))
+        print("index: " + str(received_index))
+        print("supplement: " + str(received_supplement))
+        print("WHOLE package: " + str(received_package))
+        print("len WHOLE package: " + str(len(received_package)))
+
+        # if index != received_index or received_supplement != 255 - received_index:
+        #     receiver.write(CAN)
+        #     is_okay = False
+        #     return
         if is_crc:
             checksum = crc(received_block)
         else:
@@ -115,7 +115,7 @@ def choice():
 
 def main():
     receiver = serial.Serial(
-        port="COM1", baudrate=9600, bytesize=8, timeout=2, stopbits=serial.STOPBITS_ONE
+        port="COM2", baudrate=9600, bytesize=8, timeout=2, stopbits=serial.STOPBITS_ONE
     )  # odbiornik
     # receiver.open()
     is_crc = choice()
@@ -131,7 +131,7 @@ def main():
         le = 5
         # for i in range(le):
         data = receive_blocks(receiver, package_size, index, is_crc)
-        print(data)
+        # print(data)
         # with open("output.txt", "wb") as txt_file:
         #     for line in data:
         #         txt_file.write(line)

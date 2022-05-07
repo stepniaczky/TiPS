@@ -1,0 +1,25 @@
+# depslib dependency file v1.0
+1463162036 source:c:\users\maciek\desktop\wysylanie\main.cpp
+	<fstream>
+	<string.h>
+	<windows.h>
+	"iostream"
+
+1463362363 source:c:\users\siwy\desktop\wysylanie\main.cpp
+	<fstream>
+	<string.h>
+	<windows.h>
+	"iostream"
+
+1463397818 source:c:\users\bartosz\dysk google\studia\telekomunikacja\reszta\krystian\telekomuna\zadanie 2 (xmodem)\wysylanie\main.cpp
+	<fstream>
+	<string.h>
+	<windows.h>
+	"iostream"
+
+1524479009 source:c:\users\bartosz\dysk google\studia\telekomunikacja\zad2\wysylanie\main.cpp
+	<fstream>
+	<string.h>
+	<windows.h>
+	"iostream"
+

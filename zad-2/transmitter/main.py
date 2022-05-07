@@ -12,9 +12,9 @@ CAN = b'0x18'
 CRC = b'0x43'
 
 
-serialPort1 = serial.Serial(
-        port="COM1", baudrate=9600, bytesize=8, timeout=2, stopbits=serial.STOPBITS_ONE
-    )  # odbiornik
+# serialPort1 = serial.Serial(
+#         port="COM1", baudrate=9600, bytesize=8, timeout=2, stopbits=serial.STOPBITS_ONE
+#     )  # odbiornik
 
 
 def handshake_transmitter(transmitter, s):
@@ -69,13 +69,12 @@ def send_package(transmitter, package, index):
         # transmitter.open()
         transmitter.write(package)
         answer = transmitter.read(4)
-<<<<<<< HEAD
-        print(str(serialPort1.read()) + "ddd")
-=======
-        print("sending")
->>>>>>> 8e67110ec6da87fb8e0f84d11c52dd100e6fec3d
+        # print(str(serialPort1.readall()) + "ddd")
+        print("Package: " + str(package))
+        print("len: " + str(len(package)))
+
         if answer == NAK:  # NAK b'0x15'
-            print("Send failed - package index: " + index)
+            print("Send failed - package index: " + str(index))
         elif answer == CAN:
             # transmitter.close()
             return
@@ -113,23 +112,21 @@ def crc_sum(block):
 
 
 def main():
-
-
     transmitter = serial.Serial(
-        port="COM2", baudrate=9600, bytesize=8, timeout=2, stopbits=serial.STOPBITS_ONE
+        port="COM3", baudrate=9600, bytesize=8, timeout=2, stopbits=serial.STOPBITS_ONE
     )
 
-    # type = handshake_transmitter(transmitter, 60)
     is_crc = False
-    # if type == 1:
-    #     print("Connection established")
-    # elif type == 2:
-    #     print("Connection established - CRC type")
-    #     is_crc = True
-    # else:
-    #     print("Connection failed!")
-    #     transmitter.close()
-    #     return
+    type = handshake_transmitter(transmitter, 60)
+    if type == 1:
+        print("Connection established")
+    elif type == 2:
+        print("Connection established - CRC type")
+        is_crc = True
+    else:
+        print("Connection failed!")
+        # transmitter.close()
+        return
 
     data = divide_into_blocks()
     for index, block in enumerate(data, 1):
@@ -137,7 +134,6 @@ def main():
         package = add_properties(block, index, is_crc)
         # print(package)
         send_package(transmitter, package, index)
-
 
     close_connection(transmitter)
     # transmitter.close()
