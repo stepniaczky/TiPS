@@ -67,9 +67,7 @@ int czyParzysty(int x, int y)
 char PoliczCRC_Znaku(int n, int nrZnaku) //przeliczanie CRC na postac binarna
 {
     int x, binarna[16];
-
     for(int z=0; z<16; z++) binarna[z]=0;
-
     for(int i=0; i<16; i++)
     {
         x=n%2;
@@ -81,7 +79,6 @@ char PoliczCRC_Znaku(int n, int nrZnaku) //przeliczanie CRC na postac binarna
     //obliczamy poszczegolne znaki sumaKontrolnaCRC (1-szy lub 2-gi)
     x=0;
     int k;
-
     if(nrZnaku==1) k=7;
     if(nrZnaku==2) k=15;
 
@@ -94,197 +91,157 @@ char PoliczCRC_Znaku(int n, int nrZnaku) //przeliczanie CRC na postac binarna
 
 
 
-int main()
-{
-  cout<<"XModem_Received \nUruchamianie transferu na porcie COM2...\n";
+int main() {
+    int wybor = 0;
+    cout<<"Please choose port:\n";
+    cout<<"[1]. COM2\n";
+    cout<<"[2]. COM3\n";
+    cin>>wybor;
 
- nazwaPortu="COM2"; // else nazwaPortu="COM2";
+    nazwaPortu="COM2";
 
- uchwytPortu = CreateFile(nazwaPortu, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
-        if (uchwytPortu != INVALID_HANDLE_VALUE)
-        {
-                ustawieniaSterowania.DCBlength = sizeof(ustawieniaSterowania);
-                GetCommState(uchwytPortu, &ustawieniaSterowania);
-                ustawieniaSterowania.BaudRate=CBR_9600;     // predkosc transmisji
-                ustawieniaSterowania.Parity = NOPARITY;       // bez bitu parzystosci
-                ustawieniaSterowania.StopBits = ONESTOPBIT;    // ustawienie bitu stopu (jeden bit)
-                ustawieniaSterowania.ByteSize = 8;       // liczba wysylanych bitów
-
-                ustawieniaSterowania.fParity = TRUE;
-                ustawieniaSterowania.fDtrControl = DTR_CONTROL_DISABLE; //Kontrola linii DTR: DTR_CONTROL_DISABLE (sygnal nieaktywny)
-                ustawieniaSterowania.fRtsControl = RTS_CONTROL_DISABLE; //Kontrola linii RTR: DTR_CONTROL_DISABLE (sygnal nieaktywny)
-                ustawieniaSterowania.fOutxCtsFlow = FALSE;
-                ustawieniaSterowania.fOutxDsrFlow = FALSE;
-                ustawieniaSterowania.fDsrSensitivity = FALSE;
-                ustawieniaSterowania.fAbortOnError = FALSE;
-                ustawieniaSterowania.fOutX = FALSE;
-                ustawieniaSterowania.fInX = FALSE;
-                ustawieniaSterowania.fErrorChar = FALSE;
-                ustawieniaSterowania.fNull = FALSE;
-
-                ustawieniaCzasu.ReadIntervalTimeout = 10000;
-                ustawieniaCzasu.ReadTotalTimeoutMultiplier = 10000;
-                ustawieniaCzasu.ReadTotalTimeoutConstant = 10000;
-                ustawieniaCzasu.WriteTotalTimeoutMultiplier = 100;
-                ustawieniaCzasu.WriteTotalTimeoutConstant = 100;
-
-          SetCommState(uchwytPortu, &ustawieniaSterowania);
-                SetCommTimeouts(uchwytPortu, &ustawieniaCzasu);
-          ClearCommError(uchwytPortu, &blad ,&zasobyPortu);
- }
- else {
-        cout<<"Nieudane polaczenie (COM2, 9600kb/s, 8-bitowe dane, jeden bit stopu)\n";
-  }
-
-  cout<<"Nazwa pliku do ZAPISU: ";
-  cin>>nazwaPliku;
-
-    cout << "Wpisz NAK lub C\n";
+    uchwytPortu = CreateFile(nazwaPortu, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
+    if (uchwytPortu != INVALID_HANDLE_VALUE) {
+        ustawieniaSterowania.DCBlength = sizeof(ustawieniaSterowania);
+        GetCommState(uchwytPortu, &ustawieniaSterowania);
+        ustawieniaSterowania.BaudRate=CBR_9600;     // predkosc transmisji
+        ustawieniaSterowania.Parity = NOPARITY;       // bez bitu parzystosci
+        ustawieniaSterowania.StopBits = ONESTOPBIT;    // ustawienie bitu stopu (jeden bit)
+        ustawieniaSterowania.ByteSize = 8;       // liczba wysylanych bitów
+        ustawieniaSterowania.fParity = TRUE;
+        ustawieniaSterowania.fDtrControl = DTR_CONTROL_DISABLE; //Kontrola linii DTR: DTR_CONTROL_DISABLE (sygnal nieaktywny)
+        ustawieniaSterowania.fRtsControl = RTS_CONTROL_DISABLE; //Kontrola linii RTR: DTR_CONTROL_DISABLE (sygnal nieaktywny)
+        ustawieniaSterowania.fOutxCtsFlow = FALSE;
+        ustawieniaSterowania.fOutxDsrFlow = FALSE;
+        ustawieniaSterowania.fDsrSensitivity = FALSE;
+        ustawieniaSterowania.fAbortOnError = FALSE;
+        ustawieniaSterowania.fOutX = FALSE;
+        ustawieniaSterowania.fInX = FALSE;
+        ustawieniaSterowania.fErrorChar = FALSE;
+        ustawieniaSterowania.fNull = FALSE;
+        ustawieniaCzasu.ReadIntervalTimeout = 10000;
+        ustawieniaCzasu.ReadTotalTimeoutMultiplier = 10000;
+        ustawieniaCzasu.ReadTotalTimeoutConstant = 10000;
+        ustawieniaCzasu.WriteTotalTimeoutMultiplier = 100;
+        ustawieniaCzasu.WriteTotalTimeoutConstant = 100;
+        SetCommState(uchwytPortu, &ustawieniaSterowania);
+        SetCommTimeouts(uchwytPortu, &ustawieniaCzasu);
+        ClearCommError(uchwytPortu, &blad ,&zasobyPortu);
+        }
+    else { cout<<"Connection failed!\n"; }
+    cout<<"Save to file with name: ";
+    cin>>nazwaPliku;
+    cout << "Start with NAK or C?\n";
     string aa;
     cin >>aa;
     if(aa=="NAK") znak = NAK;
     else znak = 'C';
 
- for(int i=0;i<6;i++)
- {
-  cout<<"\nWysylanie\n";
-  //HANDLE, LPVOID, DWORD, LPDWORD, LPOVERLAPPED
-  WriteFile(uchwytPortu, &znak, licznikZnakow, &rozmiarZnaku, NULL);
-  //czeka na SOH
-  cout<<"Oczekiwanie na komunikat SOH...\n";
-  ReadFile(uchwytPortu, &znak, licznikZnakow, &rozmiarZnaku, NULL);
-  cout<<znak<<endl;
-       if(znak==SOH)
-  {
-   cout<<"Ustanowienie polaczenia powiodlo sie!\n";
-   transmisja=true;
-   break;
-  }
- }
+    for(int i=0;i<6;i++) {
+        cout<<"\nSending\n";
+        //HANDLE, LPVOID, DWORD, LPDWORD, LPOVERLAPPED
+        WriteFile(uchwytPortu, &znak, licznikZnakow, &rozmiarZnaku, NULL);
+        //czeka na SOH
+        cout<<"Waiting for SOH...\n";
+        ReadFile(uchwytPortu, &znak, licznikZnakow, &rozmiarZnaku, NULL);
+        cout<<znak<<endl;
+        if(znak==SOH) {
+            cout<<"Connection established\n";
+            transmisja=true;
+            break;}
+    }
 
- //nie nadszedl SOH
- if(!transmisja)
- {
-  cout<<"ERROR - polaczenie nieudane\n";
-  exit(1);
- }
- plik.open(nazwaPliku,ios::binary);
- cout<<"Trwa odbieranie pliku, prosze czekac...";
+    //nie nadszedl SOH
+    if(!transmisja) {
+        cout<<"ERROR - connection failed\n";
+        exit(1); }
+    plik.open(nazwaPliku,ios::binary);
+    cout<<"Receiving the file, please wait...";
+    ReadFile(uchwytPortu, &znak,licznikZnakow,&rozmiarZnaku, NULL);
+    numerPaczki=(int)znak;
+    ReadFile(uchwytPortu, &znak,licznikZnakow,&rozmiarZnaku, NULL);
+    dopelnienieDo255=znak;
 
- ReadFile(uchwytPortu, &znak,licznikZnakow,&rozmiarZnaku, NULL);
- numerPaczki=(int)znak;
+    for(int i=0;i<128;i++){
+        ReadFile(uchwytPortu, &znak,licznikZnakow,&rozmiarZnaku, NULL);
+        blokDanych[i]=znak;
+    }
+    ReadFile(uchwytPortu, &znak,licznikZnakow,&rozmiarZnaku, NULL);
+    sumaKontrolnaCRC[0]=znak;
+    ReadFile(uchwytPortu, &znak,licznikZnakow,&rozmiarZnaku, NULL);
+    sumaKontrolnaCRC[1]=znak;
+    poprawnyPakiet=true;
+    if ((char)(255-numerPaczki)!=dopelnienieDo255){
+        cout<<"ERROR - incorrect package number!\n";
+        WriteFile(uchwytPortu, &NAK,licznikZnakow,&rozmiarZnaku, NULL);
+        poprawnyPakiet=false;
+        }
+    else {
+        tmpCRC=PoliczCRC(blokDanych,128); // sprawdzanie czy sumy kontrole sa poprawne
+        if(PoliczCRC_Znaku(tmpCRC,1)!=sumaKontrolnaCRC[0] || PoliczCRC_Znaku(tmpCRC,2)!=sumaKontrolnaCRC[1]) {
+            cout<<"ERROR - incorrect checksum!\n";
+            WriteFile(uchwytPortu, &NAK,licznikZnakow,&rozmiarZnaku, NULL); //NAK
+            poprawnyPakiet=false;
+            }
+        }
 
- ReadFile(uchwytPortu, &znak,licznikZnakow,&rozmiarZnaku, NULL);
- dopelnienieDo255=znak;
+    if(poprawnyPakiet) {
+        for(int i=0;i<128;i++) {
+            if(blokDanych[i]!=26) {plik<<blokDanych[i];}
+            }
+    cout<<"Package sent successfully\n";
+    WriteFile(uchwytPortu, &ACK,licznikZnakow,&rozmiarZnaku, NULL);
+    }
 
- for(int i=0;i<128;i++)
- {
-  ReadFile(uchwytPortu, &znak,licznikZnakow,&rozmiarZnaku, NULL);
-  blokDanych[i]=znak;
- }
-
- ReadFile(uchwytPortu, &znak,licznikZnakow,&rozmiarZnaku, NULL);
- sumaKontrolnaCRC[0]=znak;
- ReadFile(uchwytPortu, &znak,licznikZnakow,&rozmiarZnaku, NULL);
- sumaKontrolnaCRC[1]=znak;
- poprawnyPakiet=true;
-
-
-      if ((char)(255-numerPaczki)!=dopelnienieDo255)
- {
-  cout<<"ERROR - otrzymano niepoprawny numer pakietu!\n";
-  WriteFile(uchwytPortu, &NAK,licznikZnakow,&rozmiarZnaku, NULL);
-  poprawnyPakiet=false;
-
- }
- else
- {
-  tmpCRC=PoliczCRC(blokDanych,128); // sprawdzanie czy sumy kontrole sa poprawne
-
-  if(PoliczCRC_Znaku(tmpCRC,1)!=sumaKontrolnaCRC[0] || PoliczCRC_Znaku(tmpCRC,2)!=sumaKontrolnaCRC[1])
-  {
-   cout<<"ERROR - zla suma kontrola!\n";
-   WriteFile(uchwytPortu, &NAK,licznikZnakow,&rozmiarZnaku, NULL); //NAK
-   poprawnyPakiet=false;
-  }
- }
-
- if(poprawnyPakiet)
- {
-  for(int i=0;i<128;i++)
-   {
-    if(blokDanych[i]!=26)
-     plik<<blokDanych[i];
-   }
-  cout<<"Przeslanie pakietu zakonczone powodzeniem!\n";
-  WriteFile(uchwytPortu, &ACK,licznikZnakow,&rozmiarZnaku, NULL);
- }
-
- while(1)
- {
-  ReadFile(uchwytPortu, &znak,licznikZnakow,&rozmiarZnaku, NULL);
-  if(znak==EOT || znak==CAN) break;
-  cout<<"Trwa odbieranie danych...";
-
-  ReadFile(uchwytPortu, &znak,licznikZnakow,&rozmiarZnaku, NULL);
-  numerPaczki=(int)znak;
-
-  ReadFile(uchwytPortu, &znak,licznikZnakow,&rozmiarZnaku, NULL);
-  dopelnienieDo255=znak;
-
-  for(int i=0;i<128;i++)
-  {
-   ReadFile(uchwytPortu, &znak,licznikZnakow,&rozmiarZnaku, NULL);
-   blokDanych[i]=znak;
-  }
-
+    while(1) {
+        ReadFile(uchwytPortu, &znak,licznikZnakow,&rozmiarZnaku, NULL);
+        if(znak==EOT || znak==CAN) break;
+        cout<<"Receiving data. ";
+        ReadFile(uchwytPortu, &znak,licznikZnakow,&rozmiarZnaku, NULL);
+        numerPaczki=(int)znak;
+        ReadFile(uchwytPortu, &znak,licznikZnakow,&rozmiarZnaku, NULL);
+        dopelnienieDo255=znak;
+        for(int i=0;i<128;i++) {
+            ReadFile(uchwytPortu, &znak,licznikZnakow,&rozmiarZnaku, NULL);
+            blokDanych[i]=znak;
+            }
 
         ReadFile(uchwytPortu, &znak,licznikZnakow,&rozmiarZnaku, NULL);
-  sumaKontrolnaCRC[0]=znak;
-  ReadFile(uchwytPortu, &znak,licznikZnakow,&rozmiarZnaku, NULL);
-  sumaKontrolnaCRC[1]=znak;
+        sumaKontrolnaCRC[0]=znak;
+        ReadFile(uchwytPortu, &znak,licznikZnakow,&rozmiarZnaku, NULL);
+        sumaKontrolnaCRC[1]=znak;
         poprawnyPakiet=true;
 
- if((char)(255-numerPaczki)!=dopelnienieDo255)
-  {
-   cout<<"ERROR - zly numer pakietu!\n";
-   WriteFile(uchwytPortu, &NAK,licznikZnakow,&rozmiarZnaku, NULL);
-   poprawnyPakiet=false;
-  }
-  else
-  {
-   tmpCRC=PoliczCRC(blokDanych,128);
-
-   if(PoliczCRC_Znaku(tmpCRC,1)!=sumaKontrolnaCRC[0] || PoliczCRC_Znaku(tmpCRC,2)!=sumaKontrolnaCRC[1])
-   {
-    cout<<"ERROR - zla suma kontrolna!\n";
-    WriteFile(uchwytPortu, &NAK,licznikZnakow,&rozmiarZnaku, NULL);
-    poprawnyPakiet=false;
-   }
-  }
-  if(poprawnyPakiet)
-  {
-   for(int i=0;i<128;i++)
-   {
-    if(blokDanych[i]!=26)
-     plik<<blokDanych[i];
-   }
-
-   cout<<"Przeslanie pakietu zakonczone powodzeniem!\n";
-   WriteFile(uchwytPortu, &ACK,licznikZnakow,&rozmiarZnaku, NULL);
-  }
- }
- WriteFile(uchwytPortu, &ACK,licznikZnakow,&rozmiarZnaku, NULL);
-
- plik.close();
- CloseHandle(uchwytPortu);
-
- if(znak==CAN) cout<<"ERROR - polaczenie zostalo przerwane! \n";
- else cout<<"Hurra! Plik w calosci odebrany!";
- cin.get();
- cin.get();
- int a;
- cin>>a;
-
- return 0;
+        if((char)(255-numerPaczki)!=dopelnienieDo255) {
+            cout<<"ERROR - incorrect package number!\n";
+            WriteFile(uchwytPortu, &NAK,licznikZnakow,&rozmiarZnaku, NULL);
+            poprawnyPakiet=false;
+            }
+        else {
+            tmpCRC=PoliczCRC(blokDanych,128);
+            if(PoliczCRC_Znaku(tmpCRC,1)!=sumaKontrolnaCRC[0] || PoliczCRC_Znaku(tmpCRC,2)!=sumaKontrolnaCRC[1]) {
+                cout<<"ERROR - incorrect checksum!\n";
+                WriteFile(uchwytPortu, &NAK,licznikZnakow,&rozmiarZnaku, NULL);
+                poprawnyPakiet=false;
+                }
+            }
+        if(poprawnyPakiet) {
+            for(int i=0;i<128;i++) {
+                if(blokDanych[i]!=26)
+                    plik<<blokDanych[i];
+            }
+        cout<<"Package sent successfully!\n";
+        WriteFile(uchwytPortu, &ACK,licznikZnakow,&rozmiarZnaku, NULL);
+        }
+    }
+    WriteFile(uchwytPortu, &ACK,licznikZnakow,&rozmiarZnaku, NULL);
+    plik.close();
+    CloseHandle(uchwytPortu);
+    if(znak==CAN) cout<<"ERROR - connection lost!\n";
+    else cout<<"File received successfully!";
+    cin.get();
+    cin.get();
+    int a;
+    cin>>a;
+    return 0;
 }
