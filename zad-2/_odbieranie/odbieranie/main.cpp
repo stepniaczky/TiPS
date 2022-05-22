@@ -90,7 +90,9 @@ int main() {
     cout<<"[2]. COM3\n";
     cin>>wybor;
 
-    nazwaPortu = "COM2";
+    if (wybor == 1) {nazwaPortu = "COM2";}
+    else {nazwaPortu = "COM3";}
+
 
     uchwytPortu = CreateFile(nazwaPortu, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
     if (uchwytPortu != INVALID_HANDLE_VALUE)
