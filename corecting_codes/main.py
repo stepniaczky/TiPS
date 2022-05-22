@@ -47,4 +47,5 @@ def main(choice):
 
 
 # application start
-menu()
+if __name__ == '__main__':
+    menu()

@@ -1,4 +1,9 @@
+# PyCharm IDE files
 **/.idea/
+
+# Python bytecode-compiled cache files
 **/__pycache__/
+
+# Output files
 zad-1/src/stream-files/**
 **.txt
