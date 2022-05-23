@@ -95,6 +95,7 @@ class Server(SocketSide):
                 if client_data == "END":
                     self.s.sendto(client_data.encode('utf-8'), client_address)
                     save_and_log(client_address[0], received_dict, received_data)
+                    received_data = ""
 
                 if client_data not in ["DICT", "END"]:
                     received_data += client_data
