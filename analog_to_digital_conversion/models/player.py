@@ -7,16 +7,23 @@ class Player:
     def __init__(self, sampling):
         self.sampling = sampling
         self.audio = sc.default_speaker()
-        self.channels = None
 
-    def play_recorded(self, data: np.ndarray):
-        self.audio.play(data, self.sampling, self.channels)
+    def play_recorded(self, data: np.ndarray) -> str:
+        try:
+            self.audio.play(data, self.sampling)
+            return "Playing recorded audio."
+        except TypeError:
+            return "There is no recorded audio to play."
 
-    def play_saved(self, filename: str):
-        data = read(filename)
-        sampling = data[0]
-        data = np.float64(data[1] / np.max(abs(data[1])))
-        channels = []
-        for i in range(len(data[0])):
-            channels.append(i)
-        self.audio.play(data, sampling, channels)
+    def play_saved(self, filename: str) -> str:
+        try:
+            data = read(filename)
+            sampling = data[0]
+            data = np.float64(data[1] / np.max(abs(data[1])))
+            channels = []
+            for i in range(len(data[0])):
+                channels.append(i)
+            self.audio.play(data, sampling, channels)
+            return "Playing saved audio."
+        except FileNotFoundError:
+            return "File with audio content does not exist."
