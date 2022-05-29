@@ -24,6 +24,8 @@ class Player:
             for i in range(len(data[0])):
                 channels.append(i)
             self.audio.play(data, sampling, channels)
-            return "Playing saved audio."
+            return "Saved audio has been played successfully."
         except FileNotFoundError:
             return "File with audio content does not exist."
+        except TypeError:
+            return "File with audio content is invalid."
