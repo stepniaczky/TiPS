@@ -4,7 +4,13 @@
 # Python bytecode-compiled cache files
 **/__pycache__/
 
+# Python virtual environment
+**env/
+
 # Output files
 zad-1/src/stream-files/**
 **.txt
 **.wav
+
+# Exceptions
+!requirements.txt
